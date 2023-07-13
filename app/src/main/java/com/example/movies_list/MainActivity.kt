@@ -2,7 +2,11 @@ package com.example.movies_list
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.core.widget.NestedScrollView
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.movies_list.Adapter.MovieAdapter
 import com.example.movies_list.ModelClass.MoviesModel
+import com.example.movies_list.ModelClass.ResultsItem
 import com.example.movies_list.databinding.ActivityMainBinding
 import retrofit2.Call
 import retrofit2.Callback
@@ -10,22 +14,41 @@ import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var binding: ActivityMainBinding
+    var page = 1
+    lateinit var binding : ActivityMainBinding
+    var adapter = MovieAdapter()
+    var list = ArrayList<ResultsItem>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        callApi()
+        binding.nested.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+            if (scrollY == v.getChildAt(0).measuredHeight - v.measuredHeight){
 
+                page++
+                callApi(page)
+            }
+        })
 
+        callApi(page)
     }
 
-    private fun callApi() {
+    private fun callApi(page: Int) {
         var api = ApiClient.getApiClient()?.create(ApiInterface::class.java)
-        api?.getmovies()?.enqueue(object :Callback<MoviesModel>{
+        api?.getUpcomingmovies(page)?.enqueue(object :Callback<MoviesModel>{
             override fun onResponse(call: Call<MoviesModel>, response: Response<MoviesModel>) {
-                
+
+                if (response.isSuccessful){
+                    var movielist = response.body()?.results
+
+                    list.addAll(movielist as ArrayList<ResultsItem>)
+
+                    adapter.setmovies(list)
+                    binding.rcvMovies.layoutManager = LinearLayoutManager(this@MainActivity)
+                    binding.rcvMovies.adapter = adapter
+                }
+
             }
 
             override fun onFailure(call: Call<MoviesModel>, t: Throwable) {
