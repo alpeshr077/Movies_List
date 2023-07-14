@@ -21,6 +21,7 @@ class ApiClient {
                 retrofit = Retrofit.Builder()
                     .baseUrl(BASED_URL)
                     .addConverterFactory(GsonConverterFactory.create())
+
                     .client(OkHttpClient.Builder().addInterceptor { chain ->
                         val request = chain.request().newBuilder().addHeader("Authorization","Bearer ${TOKEN}").build()
                         chain.proceed(request)

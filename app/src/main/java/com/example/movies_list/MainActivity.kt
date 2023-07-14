@@ -1,60 +1,29 @@
 package com.example.movies_list
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.core.widget.NestedScrollView
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.appcompat.app.AppCompatActivity
 import com.example.movies_list.Adapter.MovieAdapter
-import com.example.movies_list.ModelClass.MoviesModel
 import com.example.movies_list.ModelClass.ResultsItem
 import com.example.movies_list.databinding.ActivityMainBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
 
     var page = 1
-    lateinit var binding : ActivityMainBinding
+    lateinit var binding: ActivityMainBinding
     var adapter = MovieAdapter()
     var list = ArrayList<ResultsItem>()
+
+    var item = arrayOf("Playing", "Popular", "Top Rate", "Upcoming")
+    var fragments =
+        arrayOf(Playing_fragment(), Popular_Fragment(), Top_Rate_Fragment(), Upcoming_Fragment())
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.nested.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
-            if (scrollY == v.getChildAt(0).measuredHeight - v.measuredHeight){
+        binding.viewPager.adapter = FragmentAdapter(supportFragmentManager, fragments, item)
+        binding.TabLayout.setupWithViewPager(binding.viewPager)
 
-                page++
-                callApi(page)
-            }
-        })
-
-        callApi(page)
-    }
-
-    private fun callApi(page: Int) {
-        var api = ApiClient.getApiClient()?.create(ApiInterface::class.java)
-        api?.getUpcomingmovies(page)?.enqueue(object :Callback<MoviesModel>{
-            override fun onResponse(call: Call<MoviesModel>, response: Response<MoviesModel>) {
-
-                if (response.isSuccessful){
-                    var movielist = response.body()?.results
-
-                    list.addAll(movielist as ArrayList<ResultsItem>)
-
-                    adapter.setmovies(list)
-                    binding.rcvMovies.layoutManager = LinearLayoutManager(this@MainActivity)
-                    binding.rcvMovies.adapter = adapter
-                }
-
-            }
-
-            override fun onFailure(call: Call<MoviesModel>, t: Throwable) {
-
-            }
-
-        })
     }
 }
